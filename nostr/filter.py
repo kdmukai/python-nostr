@@ -45,16 +45,18 @@ class Filter:
             event_id_refs = [tag[1] for tag in event.tags if tag[0] == "e"]
             if not event_id_refs:
                 return False
-            for event_id in event_id_refs:
-                if event_id not in self.event_refs:
+            # Each event_id in the filter must be found in the Event's "e" list
+            for event_id in self.event_refs:
+                if event_id not in event_id_refs:
                     return False
         if self.pubkey_refs is not None:
             # Extract just the 'p' tag values
-            pubkey_id_refs = [tag[1] for tag in event.tags if tag[0] == "p"]
-            if not pubkey_id_refs:
+            event_pubkey_refs = [tag[1] for tag in event.tags if tag[0] == "p"]
+            if not event_pubkey_refs:
                 return False
-            for pubkey in [tag[1] for tag in event.tags if tag[0] == "p"]:
-                if pubkey not in self.pubkey_refs:
+            # Each pubkey in the filter must be found in the Event's "p" list
+            for pubkey in self.pubkey_refs:
+                if pubkey not in event_pubkey_refs:
                     return False
         return True
 
