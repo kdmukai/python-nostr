@@ -14,9 +14,9 @@ class Filter:
             since: int = None, 
             until: int = None, 
             event_refs: List[str] = None,       # the "#e" attr; list of event ids referenced in an "e" tag
-            pubkey_refs: List[str] = None,      # The "#p" attr; lost of pubkeys referenced in a "p" tag
+            pubkey_refs: List[str] = None,      # The "#p" attr; list of pubkeys referenced in a "p" tag
             limit: int = None) -> None:
-        self.IDs = ids
+        self.ids = ids
         self.kinds = kinds
         self.authors = authors
         self.since = since
@@ -27,23 +27,32 @@ class Filter:
 
 
     def matches(self, event: Event) -> bool:
-        if self.IDs != None and event.id not in self.IDs:
+        if self.ids is not None and event.id not in self.ids:
+            print(f"{event.id} not in {self.ids}")
             return False
-        if self.kinds != None and event.kind not in self.kinds:
+        if self.kinds is not None and event.kind not in self.kinds:
             return False
-        if self.authors != None and event.public_key not in self.authors:
+        if self.authors is not None and event.public_key not in self.authors:
             return False
-        if self.since != None and event.created_at < self.since:
+        if self.since is not None and event.created_at < self.since:
             return False
-        if self.until != None and event.created_at > self.until:
+        if self.until is not None and event.created_at > self.until:
             return False
         if (self.event_refs is not None or self.pubkey_refs is not None) and len(event.tags) == 0:
             return False
         if self.event_refs is not None:
-            for event_id in [tag[1] for tag in event.tags if tag[0] == "e"]:
+            # Extract just the 'e' tag values
+            event_id_refs = [tag[1] for tag in event.tags if tag[0] == "e"]
+            if not event_id_refs:
+                return False
+            for event_id in event_id_refs:
                 if event_id not in self.event_refs:
                     return False
         if self.pubkey_refs is not None:
+            # Extract just the 'p' tag values
+            pubkey_id_refs = [tag[1] for tag in event.tags if tag[0] == "p"]
+            if not pubkey_id_refs:
+                return False
             for pubkey in [tag[1] for tag in event.tags if tag[0] == "p"]:
                 if pubkey not in self.pubkey_refs:
                     return False
@@ -52,21 +61,21 @@ class Filter:
 
     def to_json_object(self) -> dict:
         res = {}
-        if self.IDs != None:
-            res["ids"] = self.IDs
-        if self.kinds != None:   
+        if self.ids is not None:
+            res["ids"] = self.ids
+        if self.kinds is not None:   
             res["kinds"] = self.kinds
-        if self.authors != None:
+        if self.authors is not None:
             res["authors"] = self.authors
-        if self.since != None:
+        if self.since is not None:
             res["since"] = self.since
-        if self.until != None:
+        if self.until is not None:
             res["until"] = self.until
-        if self.event_refs != None:
+        if self.event_refs is not None:
             res["#e"] = self.event_refs
-        if self.pubkey_refs != None:
+        if self.pubkey_refs is not None:
             res["#p"] = self.pubkey_refs
-        if self.limit != None:
+        if self.limit is not None:
             res["limit"] = self.limit
 
         return res
