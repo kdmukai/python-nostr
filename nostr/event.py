@@ -36,6 +36,9 @@ class Event:
         if self.tags is None:
             self.tags = []
 
+        if self.id is None:
+            self.compute_id()
+
 
     @staticmethod
     def serialize(public_key: str, created_at: int, kind: int, tags: "list[list[str]]", content: str) -> bytes:

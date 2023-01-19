@@ -33,14 +33,11 @@ class TestEncryptedDirectMessage:
                 break
         assert has_p_tag
 
-        # Event has no content nor id until the Event is signed
+        # Event has no content until the Event is signed
         assert dm.content is None
-        assert dm.id is None
 
         sender.sign_event(dm)
-
         assert dm.content is not None
-        assert dm.id is not None
 
         # Event signature should be valid for the Event.id
         assert dm.verify()
