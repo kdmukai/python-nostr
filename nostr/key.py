@@ -1,6 +1,7 @@
 import secrets
 import base64
 import secp256k1
+from binascii import unhexlify
 from cffi import FFI
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
@@ -31,6 +32,10 @@ class PublicKey:
         hrp, data, spec = bech32.bech32_decode(npub)
         raw_public_key = bech32.convertbits(data, 5, 8)[:-1]
         return cls(bytes(raw_public_key))
+    
+    @classmethod
+    def from_hex(cls, hex: str):
+        return cls(unhexlify(hex))
 
 
 class PrivateKey:
@@ -67,7 +72,7 @@ class PrivateKey:
 
     def encrypt_message(self, dm: EncryptedDirectMessage) -> None:
         padder = padding.PKCS7(128).padder()
-        padded_data = padder.update(dm.cleartext_message.encode()) + padder.finalize()
+        padded_data = padder.update(dm.cleartext_content.encode()) + padder.finalize()
 
         iv = secrets.token_bytes(16)
         cipher = Cipher(algorithms.AES(self.compute_shared_secret(dm.recipient_pubkey)), modes.CBC(iv))
@@ -99,6 +104,7 @@ class PrivateKey:
         return sig.hex()
     
     def sign_event(self, event: Event) -> None:
+        """ Signs and populates the Event's signature; will also encrypt DM message """
         if event.kind == EventKind.ENCRYPTED_DIRECT_MESSAGE:
             self.encrypt_message(event)
         event.compute_id()

@@ -23,7 +23,7 @@ class EventKind(IntEnum):
 @dataclass
 class Event:
     public_key: str
-    content: str = ""
+    content: str = None
     created_at: int = int(time.time())
     kind: int = EventKind.TEXT_NOTE
     tags: List[List[str]] = None
@@ -32,6 +32,7 @@ class Event:
 
 
     def __post_init__(self):
+        # Can't initialize the nested type above w/out more complex factory, so doing it here
         if self.tags is None:
             self.tags = []
 
@@ -83,11 +84,14 @@ class Event:
 @dataclass
 class EncryptedDirectMessage(Event):
     recipient_pubkey: str = None
-    cleartext_message: str = None
+    cleartext_content: str = None
     reference_event_id: str = None
 
 
     def __post_init__(self):
+        if self.content is not None:
+            raise Exception("Encrypted DMs cannot use the `content` field; use `cleartext_content` instead.")
+
         self.kind = EventKind.ENCRYPTED_DIRECT_MESSAGE
         super().__post_init__()
 

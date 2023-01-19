@@ -6,6 +6,7 @@ from .filter import Filters
 from .message_pool import MessagePool
 from .message_type import ClientMessageType
 from .relay import Relay, RelayPolicy
+from .subscription import Subscription
 
 
 
@@ -27,9 +28,10 @@ class RelayManager:
     def remove_relay(self, url: str):
         self.relays.pop(url)
 
-    def add_subscription(self, id: str, filters: Filters):
+
+    def add_subscription(self, subscription: Subscription):
         for relay in self.relays.values():
-            relay.add_subscription(id, filters)
+            relay.add_subscription(subscription)
 
     def close_subscription(self, id: str):
         for relay in self.relays.values():

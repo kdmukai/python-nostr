@@ -1,23 +1,30 @@
 from collections import UserList
+from typing import List
+
 from .event import Event
+
+
 
 class Filter:
     def __init__(
             self, 
-            ids: "list[str]"=None, 
-            kinds: "list[int]"=None, 
-            authors: "list[str]"=None, 
-            since: int=None, 
-            until: int=None, 
-            tags: "dict[str, list[str]]"=None,
-            limit: int=None) -> None:
+            ids: "list[str]" = None, 
+            kinds: "list[int]" = None, 
+            authors: "list[str]" = None, 
+            since: int = None, 
+            until: int = None, 
+            event_refs: List[str] = None,       # the "#e" attr; list of event ids referenced in an "e" tag
+            pubkey_refs: List[str] = None,      # The "#p" attr; lost of pubkeys referenced in a "p" tag
+            limit: int = None) -> None:
         self.IDs = ids
         self.kinds = kinds
         self.authors = authors
         self.since = since
         self.until = until
-        self.tags = tags
+        self.event_refs = event_refs
+        self.pubkey_refs = pubkey_refs
         self.limit = limit
+
 
     def matches(self, event: Event) -> bool:
         if self.IDs != None and event.id not in self.IDs:
@@ -30,18 +37,18 @@ class Filter:
             return False
         if self.until != None and event.created_at > self.until:
             return False
-        if self.tags != None and len(event.tags) == 0:
+        if (self.event_refs is not None or self.pubkey_refs is not None) and len(event.tags) == 0:
             return False
-        if self.tags != None:
-            e_tag_identifiers = [e_tag[0] for e_tag in event.tags] 
-            for f_tag, f_tag_values in self.tags.items():
-                if f_tag[1:] not in e_tag_identifiers:
+        if self.event_refs is not None:
+            for event_id in [tag[1] for tag in event.tags if tag[0] == "e"]:
+                if event_id not in self.event_refs:
                     return False
-                for e_tag in event.tags:
-                    if e_tag[1] not in f_tag_values:
-                        return False
-        
+        if self.pubkey_refs is not None:
+            for pubkey in [tag[1] for tag in event.tags if tag[0] == "p"]:
+                if pubkey not in self.pubkey_refs:
+                    return False
         return True
+
 
     def to_json_object(self) -> dict:
         res = {}
@@ -55,14 +62,17 @@ class Filter:
             res["since"] = self.since
         if self.until != None:
             res["until"] = self.until
-        if self.tags != None:
-            for tag, values in self.tags.items():
-                res[tag] = values
+        if self.event_refs != None:
+            res["#e"] = self.event_refs
+        if self.pubkey_refs != None:
+            res["#p"] = self.pubkey_refs
         if self.limit != None:
             res["limit"] = self.limit
 
         return res
-                
+
+
+
 class Filters(UserList):
     def __init__(self, initlist: "list[Filter]"=[]) -> None:
         super().__init__(initlist)
@@ -76,4 +86,3 @@ class Filters(UserList):
 
     def to_json_array(self) -> list:
         return [filter.to_json_object() for filter in self.data]
-        

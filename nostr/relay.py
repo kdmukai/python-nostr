@@ -46,9 +46,9 @@ class Relay:
     def publish(self, message: str):
         self.ws.send(message)
 
-    def add_subscription(self, id, filters: Filters):
+    def add_subscription(self, subscription: Subscription):
         with self.lock:
-            self.subscriptions[id] = Subscription(id, filters)
+            self.subscriptions[subscription.id] = subscription
 
     def close_subscription(self, id: str) -> None:
         with self.lock:
