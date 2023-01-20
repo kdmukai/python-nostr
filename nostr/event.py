@@ -21,7 +21,7 @@ class Event():
             self, 
             public_key: str, 
             content: str, 
-            created_at: int = int(time.time()), 
+            created_at: int = None, 
             kind: int=EventKind.TEXT_NOTE, 
             tags: "list[list[str]]"=[], 
             id: str=None, 
@@ -31,7 +31,7 @@ class Event():
         
         self.public_key = public_key
         self.content = content
-        self.created_at = created_at
+        self.created_at = int(time.time())
         self.kind = kind
         self.tags = tags
         self.signature = signature
