@@ -8,14 +8,14 @@ from .event import Event
 class Filter:
     def __init__(
             self, 
-            ids: "list[str]" = None, 
-            kinds: "list[int]" = None, 
-            authors: "list[str]" = None, 
+            ids: List[str] = None, 
+            kinds: List[int] = None, 
+            authors: List[str] = None, 
             since: int = None, 
             until: int = None, 
             event_refs: List[str] = None,       # the "#e" attr; list of event ids referenced in an "e" tag
             pubkey_refs: List[str] = None,      # The "#p" attr; list of pubkeys referenced in a "p" tag
-            limit: int = None) -> None:
+            limit: int = None):
         self.ids = ids
         self.kinds = kinds
         self.authors = authors
@@ -85,15 +85,17 @@ class Filter:
 
 
 class Filters(UserList):
-    def __init__(self, initlist: "list[Filter]"=[]) -> None:
+    def __init__(self, initlist: List[Filter] = []):
         super().__init__(initlist)
         self.data: "list[Filter]"
+
 
     def match(self, event: Event):
         for filter in self.data:
             if filter.matches(event):
                 return True
         return False
+
 
     def to_json_array(self) -> list:
         return [filter.to_json_object() for filter in self.data]

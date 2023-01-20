@@ -9,6 +9,7 @@ from hashlib import sha256
 from nostr.message_type import ClientMessageType
 
 
+
 class EventKind(IntEnum):
     SET_METADATA = 0
     TEXT_NOTE = 1
@@ -40,7 +41,7 @@ class Event:
 
 
     @staticmethod
-    def serialize(public_key: str, created_at: int, kind: int, tags: "list[list[str]]", content: str) -> bytes:
+    def serialize(public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str) -> bytes:
         data = [0, public_key, created_at, kind, tags, content]
         data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return data_str.encode()

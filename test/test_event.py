@@ -6,25 +6,24 @@ from nostr.event import EventKind, Event, EncryptedDirectMessage
 
 
 @pytest.fixture
-def sender():
-    return PrivateKey()
+def sender() -> PrivateKey:
+    yield PrivateKey()
 
 @pytest.fixture
-def recipient():
-    return PrivateKey()
+def recipient() -> PrivateKey:
+    yield PrivateKey()
 
 
 
-def test_event_default_time():
+def test_event_default_time(sender: PrivateKey):
     time.sleep(1.5)
-    public_key = PrivateKey().public_key.hex()
-    event = Event(public_key=public_key, content='test event')
+    event = Event(public_key=sender.public_key.hex(), content='test event')
     assert (event.created_at - time.time()) < 1
 
 
-class TestEncryptedDirectMessage:
-    
-    def test_create_dm(self, sender, recipient):
+
+class TestEncryptedDirectMessage:    
+    def test_create_dm(self, sender: PrivateKey, recipient: PrivateKey):
         """ should construct a publishable DM Event """
         dm = EncryptedDirectMessage(
             public_key=sender.public_key.hex(),
@@ -52,7 +51,7 @@ class TestEncryptedDirectMessage:
         assert dm.verify()
 
 
-    def test_dm_encryption(self, sender, recipient):
+    def test_dm_encryption(self, sender: PrivateKey, recipient: PrivateKey):
         """ should encrypt the DM's cleartext message and be decryptable by the recipient """
         cleartext_content = "This is my secret message!"
 
@@ -72,7 +71,7 @@ class TestEncryptedDirectMessage:
         assert decrypted_msg == cleartext_content
 
 
-    def test_dm_content_not_allowed(self, sender, recipient):
+    def test_dm_content_not_allowed(self, sender: PrivateKey, recipient: PrivateKey):
         """ should throw an exception if `content` is used """
         with pytest.raises(Exception) as e:
             EncryptedDirectMessage(
