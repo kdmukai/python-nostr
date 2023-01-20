@@ -15,6 +15,13 @@ class RelayException(Exception):
 
 
 
+
+
+class RelayException(Exception):
+    pass
+
+
+
 class RelayManager:
 
     def __init__(self, ssl_options: dict = None, try_reconnect: bool = True) -> None:

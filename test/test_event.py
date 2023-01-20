@@ -1,6 +1,8 @@
 import pytest
+import time
 from nostr.key import PrivateKey
 from nostr.event import EventKind, Event, EncryptedDirectMessage
+
 
 
 @pytest.fixture
@@ -11,6 +13,13 @@ def sender():
 def recipient():
     return PrivateKey()
 
+
+
+def test_event_default_time():
+    time.sleep(1.5)
+    public_key = PrivateKey().public_key.hex()
+    event = Event(public_key=public_key, content='test event')
+    assert (event.created_at - time.time()) < 1
 
 
 class TestEncryptedDirectMessage:
