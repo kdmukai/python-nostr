@@ -52,9 +52,9 @@ class Event:
 
 
     def sign(self, private_key_hex: str) -> None:
-        if self.id is None:
-            self.compute_id()
-            # self.id = Event.compute_id(self.public_key, self.created_at, self.kind, self.tags, self.content)
+        # Always recompute id just in case something changed
+        self.compute_id()
+
         sk = PrivateKey(bytes.fromhex(private_key_hex))
         sig = sk.schnorr_sign(bytes.fromhex(self.id), None, raw=True)
         self.signature = sig.hex()
@@ -62,7 +62,10 @@ class Event:
 
     def verify(self) -> bool:
         pub_key = PublicKey(bytes.fromhex("02" + self.public_key), True) # add 02 for schnorr (bip340)
+
+        # Always recompute id just in case something changed
         self.compute_id()
+
         return pub_key.schnorr_verify(bytes.fromhex(self.id), bytes.fromhex(self.signature), None, raw=True)
 
 
@@ -104,3 +107,5 @@ class EncryptedDirectMessage(Event):
         # Optionally specify a reference event (DM) this is a reply to
         if self.reference_event_id:
             self.tags.append(['m', self.reference_event_id])
+        
+        self.compute_id()

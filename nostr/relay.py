@@ -1,11 +1,13 @@
 import json
 from threading import Lock
-from websocket import WebSocketApp
+from websocket import WebSocketApp, WebSocketConnectionClosedException
 from .event import Event
 from .filter import Filters
 from .message_pool import MessagePool
 from .message_type import RelayMessageType
 from .subscription import Subscription
+
+
 
 class RelayPolicy:
     def __init__(self, should_read: bool=True, should_write: bool=True) -> None:
@@ -18,17 +20,21 @@ class RelayPolicy:
             "write": self.should_write
         }
 
+
+
 class Relay:
     def __init__(
             self, 
             url: str, 
             policy: RelayPolicy, 
             message_pool: MessagePool,
-            subscriptions: dict[str, Subscription]={}) -> None:
+            subscriptions: dict[str, Subscription] = {},
+            ssl_options: dict = None) -> None:
         self.url = url
         self.policy = policy
         self.message_pool = message_pool
         self.subscriptions = subscriptions
+        self.ssl_options = ssl_options
         self.lock = Lock()
         self.ws = WebSocketApp(
             url,
@@ -37,14 +43,21 @@ class Relay:
             on_error=self._on_error,
             on_close=self._on_close)
 
-    def connect(self, ssl_options: dict=None):
-        self.ws.run_forever(sslopt=ssl_options)
+    def connect(self):
+        self.ws.run_forever(
+            sslopt=self.ssl_options,
+            ping_interval=10,   # Keep the websocket alive w/regular pings
+        )
 
     def close(self):
         self.ws.close()
 
     def publish(self, message: str):
-        self.ws.send(message)
+        try:
+            self.ws.send(message)
+        except WebSocketConnectionClosedException as e:
+            print(f"Attempting to reconnect to {self.url}")
+            self.connect()
 
     def add_subscription(self, subscription: Subscription):
         with self.lock:
@@ -77,7 +90,7 @@ class Relay:
             self.message_pool.add_message(message, self.url)
     
     def _on_error(self, class_obj, error):
-        pass
+        print(error)
 
     def _is_valid_message(self, message: str) -> bool:
         message = message.strip("\n")
