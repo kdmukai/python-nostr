@@ -103,6 +103,6 @@ class EncryptedDirectMessage(Event):
 
         # Optionally specify a reference event (DM) this is a reply to
         if self.reference_event_id:
-            self.tags.append(['m', self.reference_event_id])
+            self.tags.append(['e', self.reference_event_id])
         
         self.compute_id()
