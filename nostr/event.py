@@ -24,7 +24,7 @@ class EventKind(IntEnum):
 class Event:
     public_key: str
     content: str = None
-    created_at: int = int(time.time())
+    created_at: int = None
     kind: int = EventKind.TEXT_NOTE
     tags: List[List[str]] = None
     id: str = None
@@ -32,6 +32,10 @@ class Event:
 
 
     def __post_init__(self):
+        if self.created_at is None:
+            # Must set time at each instantiation, not when class is imported
+            self.created_at = int(time.time())
+
         # Can't initialize the nested type above w/out more complex factory, so doing it here
         if self.tags is None:
             self.tags = []
@@ -49,15 +53,6 @@ class Event:
 
     def compute_id(self):
         self.id = sha256(Event.serialize(self.public_key, self.created_at, self.kind, self.tags, self.content)).hexdigest()
-
-
-    def sign(self, private_key_hex: str) -> None:
-        # Always recompute id just in case something changed
-        self.compute_id()
-
-        sk = PrivateKey(bytes.fromhex(private_key_hex))
-        sig = sk.schnorr_sign(bytes.fromhex(self.id), None, raw=True)
-        self.signature = sig.hex()
 
 
     def verify(self) -> bool:
