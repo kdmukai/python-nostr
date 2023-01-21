@@ -32,8 +32,10 @@ class Event:
 
 
     def __post_init__(self):
+        if not isinstance(self.content, str):
+            raise TypeError("Argument 'content' must be of type str")
+
         if self.created_at is None:
-            # Must set time at each instantiation, not when class is imported
             self.created_at = int(time.time())
 
         # Can't initialize the nested type above w/out more complex factory, so doing it here
