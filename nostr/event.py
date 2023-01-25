@@ -52,6 +52,16 @@ class Event:
         data = [0, public_key, created_at, kind, tags, content]
         data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return data_str.encode()
+    
+
+    @property
+    def pubkey_refs(self) -> List[str]:
+        return [tag[1] for tag in self.tags if tag[0] == 'p']
+
+
+    @property
+    def event_refs(self) -> List[str]:
+        return [tag[1] for tag in self.tags if tag[0] == 'e']
 
 
     def compute_id(self):

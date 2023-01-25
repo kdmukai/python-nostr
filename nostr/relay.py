@@ -1,4 +1,5 @@
 import json
+import time
 from threading import Lock
 from websocket import WebSocketApp, WebSocketConnectionClosedException
 from .event import Event
@@ -35,6 +36,7 @@ class Relay:
         self.message_pool = message_pool
         self.subscriptions = subscriptions
         self.ssl_options = ssl_options
+        self.should_be_running: bool = False
         self.lock = Lock()
         self.ws = WebSocketApp(
             url,
@@ -48,16 +50,15 @@ class Relay:
             sslopt=self.ssl_options,
             ping_interval=10,   # Keep the websocket alive w/regular pings
         )
+        self.should_be_running = True
 
     def close(self):
+        self.should_be_running = False
+        print(f"{self.url}: closing", flush=True)
         self.ws.close()
 
     def publish(self, message: str):
-        try:
-            self.ws.send(message)
-        except WebSocketConnectionClosedException as e:
-            print(f"Attempting to reconnect to {self.url}")
-            self.connect()
+        self.ws.send(message)
 
     def add_subscription(self, subscription: Subscription):
         with self.lock:
@@ -80,17 +81,22 @@ class Relay:
         }
 
     def _on_open(self, class_obj):
-        pass
+        print(f"{self.url}: opened")
 
     def _on_close(self, class_obj, status_code, message):
-        pass
+        print(f"{self.url}: closed", flush=True)
+
+        if self.should_be_running:
+            print(f"{self.url}: attempting reconnect")
+            time.sleep(1)
+            self.connect()
 
     def _on_message(self, class_obj, message: str):
         if self._is_valid_message(message):
             self.message_pool.add_message(message, self.url)
     
     def _on_error(self, class_obj, error):
-        print(error)
+        print(f"{self.url}: {error}")
 
     def _is_valid_message(self, message: str) -> bool:
         message = message.strip("\n")

@@ -72,7 +72,11 @@ class RelayManager:
     def publish_message(self, message: str):
         for relay in self.relays.values():
             if relay.policy.should_write:
-                relay.publish(message)
+                try:
+                    relay.publish(message)
+                except WebSocketConnectionClosedException:
+                    print(f"Attempting to reconnect to {relay.url}")
+                    self.open_connection(relay)
 
 
     def publish_event(self, event: Event):
