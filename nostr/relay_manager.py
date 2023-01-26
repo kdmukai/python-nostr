@@ -24,9 +24,10 @@ class RelayException(Exception):
 
 class RelayManager:
 
-    def __init__(self, ssl_options: dict = None, try_reconnect: bool = True) -> None:
+    def __init__(self, ssl_options: dict = None, try_reconnect: bool = True, proxy: dict = {}) -> None:
         self.ssl_options = ssl_options
         self.try_reconnect = try_reconnect
+        self.proxy = proxy
         self.relays: dict[str, Relay] = {}
         self.message_pool = MessagePool()
 

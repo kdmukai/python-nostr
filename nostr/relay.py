@@ -30,12 +30,14 @@ class Relay:
             policy: RelayPolicy, 
             message_pool: MessagePool,
             subscriptions: dict[str, Subscription] = {},
-            ssl_options: dict = None) -> None:
+            ssl_options: dict = None,
+            proxy: dict = {}) -> None:
         self.url = url
         self.policy = policy
         self.message_pool = message_pool
         self.subscriptions = subscriptions
         self.ssl_options = ssl_options
+        self.proxy = proxy
         self.should_be_running: bool = False
         self.lock = Lock()
         self.ws = WebSocketApp(
@@ -48,6 +50,8 @@ class Relay:
     def connect(self):
         self.ws.run_forever(
             sslopt=self.ssl_options,
+            http_proxy_host=self.proxy.get('host'),
+            http_proxy_port=self.proxy.get('port'),
             ping_interval=10,   # Keep the websocket alive w/regular pings
         )
         self.should_be_running = True
