@@ -47,9 +47,39 @@ class Event:
             self.compute_id()
 
 
-    @staticmethod
-    def serialize(public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str) -> bytes:
-        data = [0, public_key, created_at, kind, tags, content]
+    @classmethod
+    def from_json(cls, event_json: str):
+        """
+            With or without the "event" outer level:
+            {
+                "event": {
+                    "id": <event_id>,
+                    "pubkey": <public_key>,
+                    "created_at": 1674849977,
+                    "kind": 1,
+                    "tags": [],
+                    "content": "Hello!",
+                    "sig": ""
+                }
+            }
+        """
+        data = json.loads(event_json)
+        if "event" in data:
+            data = data["event"]
+        return cls(
+            public_key=data.get("pubkey"),
+            content=data.get("content"),
+            created_at=data.get("created_at"),
+            kind=data.get("kind"),
+            tags=data.get("tags"),
+            id=data.get("id"),
+            signature=data.get("sig"),
+        )
+
+
+
+    def serialize(self) -> bytes:
+        data = [0, self.public_key, self.created_at, self.kind, self.tags, self.content]
         data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return data_str.encode()
     
@@ -65,7 +95,7 @@ class Event:
 
 
     def compute_id(self):
-        self.id = sha256(Event.serialize(self.public_key, self.created_at, self.kind, self.tags, self.content)).hexdigest()
+        self.id = sha256(self.serialize()).hexdigest()
 
 
     def add_pubkey_ref(self, pubkey:str):
