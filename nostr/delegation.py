@@ -1,4 +1,3 @@
-import time
 from dataclasses import dataclass
 from typing import List
 
@@ -22,7 +21,8 @@ class Delegation:
         valid_until = None
         for condition in parts[3].split("&"):
             if condition.startswith("kind"):
-                kinds.append(int(condition.split("=")[1]))
+                kind_values = condition.split("=")[1]
+                kinds = [int(k) for k in kind_values.split(",")]
             elif condition.startswith("created_at>"):
                 valid_from = int(condition.split(">")[1])
             elif condition.startswith("created_at<"):
@@ -37,7 +37,9 @@ class Delegation:
 
     @property
     def conditions(self) -> str:
-        conditions = [f"kind={kind}" for kind in self.event_kinds]
+        conditions = []
+        if self.event_kinds:
+            conditions.append(f"""kind={",".join([str(k) for k in self.event_kinds])}""")
         if self.valid_from:
             conditions.append(f"created_at>{self.valid_from}")
         if self.valid_until:

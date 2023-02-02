@@ -48,6 +48,18 @@ class Event:
 
 
     @classmethod
+    def from_dict(cls, event_dict: dict):
+        return cls(
+            public_key=event_dict.get("pubkey"),
+            content=event_dict.get("content"),
+            created_at=event_dict.get("created_at"),
+            kind=event_dict.get("kind"),
+            tags=event_dict.get("tags"),
+            id=event_dict.get("id"),
+            signature=event_dict.get("sig"),
+        )
+
+    @classmethod
     def from_json(cls, event_json: str):
         """
             With or without the "event" outer level:
@@ -66,15 +78,7 @@ class Event:
         data = json.loads(event_json)
         if "event" in data:
             data = data["event"]
-        return cls(
-            public_key=data.get("pubkey"),
-            content=data.get("content"),
-            created_at=data.get("created_at"),
-            kind=data.get("kind"),
-            tags=data.get("tags"),
-            id=data.get("id"),
-            signature=data.get("sig"),
-        )
+        return Event.from_dict(data)
 
 
 
