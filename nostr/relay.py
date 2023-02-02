@@ -50,9 +50,10 @@ class Relay:
     def connect(self):
         self.ws.run_forever(
             sslopt=self.ssl_options,
-            http_proxy_host=self.proxy.get('host'),
-            http_proxy_port=self.proxy.get('port'),
-            ping_interval=10,   # Keep the websocket alive w/regular pings
+            http_proxy_host=None if self.proxy is None else self.proxy.get('host'), 
+            http_proxy_port=None if self.proxy is None else self.proxy.get('port'),
+            proxy_type=None if self.proxy is None else self.proxy.get('type'),
+            ping_interval=10,
         )
         self.should_be_running = True
 
