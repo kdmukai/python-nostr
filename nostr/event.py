@@ -73,12 +73,17 @@ class Event:
         return Event.from_dict(data)
 
 
-
-    def serialize(self) -> bytes:
-        data = [0, self.public_key, self.created_at, self.kind, self.tags, self.content]
+    @staticmethod
+    def serialize(public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str) -> bytes:
+        data = [0, public_key, created_at, kind, tags, content]
         data_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return data_str.encode()
-    
+
+
+    @staticmethod
+    def compute_id(public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str):
+        return sha256(Event.serialize(public_key, created_at, kind, tags, content)).hexdigest()
+
 
     @property
     def pubkey_refs(self) -> List[str]:
@@ -88,11 +93,6 @@ class Event:
     @property
     def event_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'e']
-
-
-    @staticmethod
-    def compute_id(public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str):
-        return sha256(Event.serialize(public_key, created_at, kind, tags, content)).hexdigest()
 
 
     @property
