@@ -86,6 +86,12 @@ class Event:
 
 
     @property
+    def id(self) -> str:
+        # Always recompute the id to reflect the up-to-date state of the Event
+        return Event.compute_id(self.public_key, self.created_at, self.kind, self.tags, self.content)
+
+
+    @property
     def pubkey_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'p']
 
@@ -93,12 +99,6 @@ class Event:
     @property
     def event_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'e']
-
-
-    @property
-    def id(self) -> str:
-        # Always recompute the id to reflect the up-to-date state of the Event
-        return Event.compute_id(self.public_key, self.created_at, self.kind, self.tags, self.content)
 
 
     def add_pubkey_ref(self, pubkey:str):
