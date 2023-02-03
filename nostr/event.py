@@ -47,7 +47,6 @@ class Event:
             created_at=event_dict.get("created_at"),
             kind=event_dict.get("kind"),
             tags=event_dict.get("tags"),
-            id=event_dict.get("id"),
             signature=event_dict.get("sig"),
         )
 
@@ -116,19 +115,23 @@ class Event:
         return pub_key.schnorr_verify(bytes.fromhex(self.id), bytes.fromhex(self.signature), None, raw=True)
 
 
+    def to_json(self) -> dict:
+        return {
+            "id": self.id,
+            "pubkey": self.public_key,
+            "created_at": self.created_at,
+            "kind": self.kind,
+            "tags": self.tags,
+            "content": self.content,
+            "sig": self.signature
+        }
+        
+
     def to_message(self) -> str:
         return json.dumps(
             [
                 ClientMessageType.EVENT,
-                {
-                    "id": self.id,
-                    "pubkey": self.public_key,
-                    "created_at": self.created_at,
-                    "kind": self.kind,
-                    "tags": self.tags,
-                    "content": self.content,
-                    "sig": self.signature
-                }
+                self.to_json(),
             ]
         )
 
