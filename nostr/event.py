@@ -1,3 +1,4 @@
+from binascii import unhexlify
 import time
 import json
 from binascii import unhexlify
@@ -93,6 +94,12 @@ class Event:
 
 
     @property
+    def note_id(self) -> str:
+        converted_bits = bech32.convertbits(unhexlify(self.id), 8, 5)
+        return bech32.bech32_encode("note", converted_bits, bech32.Encoding.BECH32)
+
+
+    @property
     def pubkey_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'p']
 
@@ -100,12 +107,6 @@ class Event:
     @property
     def event_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'e']
-    
-
-    @property
-    def note_id(self) -> str:
-        converted_bits = bech32.convertbits(unhexlify(self.id), 8, 5)
-        return bech32.bech32_encode("note", converted_bits, bech32.Encoding.BECH32)
 
 
     def add_pubkey_ref(self, pubkey:str):
