@@ -7,14 +7,6 @@ from nostr.key import PrivateKey
 
 
 
-class TestEventKind:
-    def test_get_description_unknown_kind(self):
-        """ Should return None when an unknown event kind is specified """
-        assert "Metadata" in EventKind.get_description(EventKind.SET_METADATA)
-        assert EventKind.get_description(9999999999) == None
-
-
-
 class TestEvent:
     def test_event_default_time(self):
         """

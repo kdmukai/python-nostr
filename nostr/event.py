@@ -23,19 +23,17 @@ class EventKind:
     REACTIONS = 7
     LIST = 3000
 
-    @classmethod
-    def get_description(cls, kind: int) -> str:
-        descriptions = {
-            cls.SET_METADATA: "Set Metadata",
-            cls.TEXT_NOTE: "Text note",
-            cls.RECOMMEND_RELAY: "Recommend relay",
-            cls.CONTACTS: "Contacts",
-            cls.ENCRYPTED_DIRECT_MESSAGE: "Encrypted DMs",
-            cls.DELETE: "Delete",
-            cls.REACTIONS: "Reactions",
-            cls.LIST: "Lists",
-        }
-        return descriptions.get(kind)
+
+    ALL_KINDS = {
+        SET_METADATA: "Set Metadata",
+        TEXT_NOTE: "Text note",
+        RECOMMEND_RELAY: "Recommend relay",
+        CONTACTS: "Contacts",
+        ENCRYPTED_DIRECT_MESSAGE: "Encrypted DMs",
+        DELETE: "Delete",
+        REACTIONS: "Reactions",
+        LIST: "Lists",
+    }
 
 
 
