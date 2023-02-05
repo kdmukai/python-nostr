@@ -13,13 +13,29 @@ from nostr.message_type import ClientMessageType
 
 
 
-class EventKind(IntEnum):
+class EventKind:
     SET_METADATA = 0
     TEXT_NOTE = 1
     RECOMMEND_RELAY = 2
     CONTACTS = 3
     ENCRYPTED_DIRECT_MESSAGE = 4
     DELETE = 5
+    REACTIONS = 7
+    LIST = 3000
+
+    @classmethod
+    def get_description(cls, kind: int) -> str:
+        descriptions = {
+            cls.SET_METADATA: "Set Metadata",
+            cls.TEXT_NOTE: "Text note",
+            cls.RECOMMEND_RELAY: "Recommend relay",
+            cls.CONTACTS: "Contacts",
+            cls.ENCRYPTED_DIRECT_MESSAGE: "Encrypted DMs",
+            cls.DELETE: "Delete",
+            cls.REACTIONS: "Reactions",
+            cls.LIST: "Lists",
+        }
+        return descriptions.get(kind)
 
 
 
