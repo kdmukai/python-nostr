@@ -1,7 +1,8 @@
 from binascii import unhexlify
 import time
 import json
-from binascii import unhexlify
+import re
+from binascii import unhexlify, hexlify
 from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List
@@ -51,6 +52,9 @@ class Event:
         if self.content is not None and not isinstance(self.content, str):
             # DMs initialize content to None but all other kinds should pass in a str
             raise TypeError("Argument 'content' must be of type str")
+        
+        if self.content:
+            self.extract_content_refs()
 
         if self.created_at is None:
             self.created_at = int(time.time())
@@ -88,6 +92,12 @@ class Event:
             data = data["event"]
         return Event.from_dict(data)
 
+    @classmethod
+    def bech32_to_hex(cls, note_id):
+        hrp, data, spec = bech32.bech32_decode(note_id)
+        raw_hex = bech32.convertbits(data, 5, 8)[:-1]
+        return hexlify(bytes(raw_hex))
+
 
     @staticmethod
     def serialize(public_key: str, created_at: int, kind: int, tags: List[List[str]], content: str) -> bytes:
@@ -121,6 +131,33 @@ class Event:
     @property
     def event_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'e']
+    
+
+    def extract_content_refs(self):
+        """
+            Looks for "@npub1..." or "@note1..." in the `Event.content` and converts to
+            "#[n]" syntax w/associated 'p' and 'e' tags.
+        """
+        from nostr import key
+
+        at_ref_options = ["npub1", "note1"]
+        re_patterns = [f"@{op}[{bech32.CHARSET}]{{58}}" for op in at_ref_options]
+        regex = re.compile(f"""({ "|".join(re_patterns) })""")
+
+        ref_matches: List[str] = []
+        for ref_index in [m.start() for m in regex.finditer(self.content)]:
+            for option in at_ref_options:
+                # Remember to skip the "@" that precedes the reference
+                if self.content[ref_index+1:].startswith(option):
+                    ref_matches.append(self.content[ref_index+1:ref_index+1 + len(option) + 58])
+        
+        for i, match in enumerate(ref_matches):
+            self.content = self.content.replace("@" + match, f"#[{i}]")
+            if match.startswith("npub1"):
+                # Convert npub to pubkey hex
+                self.add_pubkey_ref(key.PublicKey.from_npub(match).hex())
+            elif match.startswith("note1"):
+                self.add_event_ref(Event.bech32_to_hex(match))
 
 
     def add_pubkey_ref(self, pubkey:str):
