@@ -49,8 +49,6 @@ class Relay:
             on_error=self._on_error,
             on_close=self._on_close
         )
-        if self.proxy_config is None:
-            self.proxy_config = RelayProxyConnectionConfig()
 
     def connect(self):
         self.ws.run_forever(
@@ -59,19 +57,17 @@ class Relay:
             http_proxy_port=self.proxy_config.port,
             proxy_type=self.proxy_config.type
         )
-        self.should_be_running = True
 
     def close(self):
-        self.should_be_running = False
         print(f"{self.url}: closing", flush=True)
         self.ws.close()
 
     def publish(self, message: str):
         self.ws.send(message)
 
-    def add_subscription(self, subscription: Subscription):
+    def add_subscription(self, id, filters: Filters):
         with self.lock:
-            self.subscriptions[subscription.id] = subscription
+            self.subscriptions[id] = Subscription(id, filters)
 
     def close_subscription(self, id: str) -> None:
         with self.lock:
@@ -94,11 +90,6 @@ class Relay:
 
     def _on_close(self, class_obj, status_code, message):
         print(f"{self.url}: closed", flush=True)
-
-        if self.should_be_running:
-            print(f"{self.url}: attempting reconnect")
-            time.sleep(1)
-            self.connect()
 
     def _on_message(self, class_obj, message: str):
         self.message_pool.add_message(message, self.url)
