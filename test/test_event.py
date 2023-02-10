@@ -2,7 +2,7 @@ import pytest
 import time
 
 from nostr import bech32
-from nostr.event import Event, EventKind, EncryptedDirectMessage
+from nostr.event import Event, EncryptedDirectMessage
 from nostr.key import PrivateKey
 
 
