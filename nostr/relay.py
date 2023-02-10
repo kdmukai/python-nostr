@@ -49,6 +49,8 @@ class Relay:
             on_error=self._on_error,
             on_close=self._on_close
         )
+        if self.proxy_config is None:
+            self.proxy_config = RelayProxyConnectionConfig()
 
     def connect(self):
         self.ws.run_forever(
