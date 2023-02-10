@@ -42,9 +42,6 @@ class RelayManager:
             name=f"{relay.url}-thread"
         ).start()
 
-        time.sleep(1)
-
-
     def remove_relay(self, url: str):
         with self.lock:
             if url in self.relays:
