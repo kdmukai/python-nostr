@@ -117,6 +117,8 @@ class PrivateKey:
         if event.kind == EventKind.ENCRYPTED_DIRECT_MESSAGE and event.content is None:
             self.encrypt_dm(event)
         event.public_key = self.public_key.hex()
+        if event.finalized_event_id is None:
+            event.finalize()
         event.signature = self.sign_message_hash(bytes.fromhex(event.id))
 
     def sign_delegation(self, delegation: Delegation) -> None:
