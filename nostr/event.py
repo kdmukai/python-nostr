@@ -51,12 +51,11 @@ class Event:
         if self.content is not None and not isinstance(self.content, str):
             # DMs initialize content to None but all other kinds should pass in a str
             raise TypeError("Argument 'content' must be of type str")
-        
-        if self.content:
-            self.extract_content_refs()
 
         if self.created_at is None:
             self.created_at = int(time.time())
+        
+        self.finalized_event_id = None
 
 
     @classmethod
@@ -113,7 +112,10 @@ class Event:
     @property
     def id(self) -> str:
         # Always recompute the id to reflect the up-to-date state of the Event
-        return Event.compute_id(self.public_key, self.created_at, self.kind, self.tags, self.content)
+        current_id = Event.compute_id(self.public_key, self.created_at, self.kind, self.tags, self.content)
+        if self.finalized_event_id is not None and self.finalized_event_id != current_id:
+            raise Exception("Finalized Event was edited!")
+        return current_id
 
 
     @property
@@ -131,6 +133,19 @@ class Event:
     def event_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'e']
     
+
+    def finalize_event(self) -> str:
+        """ Lock the Event and prevent and further changes """
+        if self.finalized_event_id is not None:
+            raise Exception("Event was already finalized!")
+
+        # Alter the content as needed and replace with refs
+        self.extract_content_refs()
+
+        # Store finalized result
+        self.finalized_event_id = self.id
+        return self.finalized_event_id
+
 
     def extract_content_refs(self):
         """
@@ -151,21 +166,26 @@ class Event:
                     ref_matches.append(self.content[ref_index+1:ref_index+1 + len(option) + 58])
         
         for i, match in enumerate(ref_matches):
-            self.content = self.content.replace("@" + match, f"#[{i}]")
             if match.startswith("npub1"):
                 # Convert npub to pubkey hex
                 self.add_pubkey_ref(key.PublicKey.from_npub(match).hex())
             elif match.startswith("note1"):
                 self.add_event_ref(Event.bech32_to_hex(match))
 
+            self.content = self.content.replace("@" + match, f"#[{len(self.tags) - 1}]")
+
 
     def add_pubkey_ref(self, pubkey:str):
         """ Adds a reference to a pubkey as a 'p' tag """
+        if self.finalized_event_id is not None:
+            raise Exception("Cannot edit a finalized Event!")
         self.tags.append(['p', pubkey])
 
 
     def add_event_ref(self, event_id:str):
         """ Adds a reference to an event_id as an 'e' tag """
+        if self.finalized_event_id is not None:
+            raise Exception("Cannot edit a finalized Event!")
         self.tags.append(['e', event_id])
 
 
