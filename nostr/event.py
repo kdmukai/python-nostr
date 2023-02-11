@@ -134,7 +134,7 @@ class Event:
         return [tag[1] for tag in self.tags if tag[0] == 'e']
     
 
-    def finalize_event(self) -> str:
+    def finalize(self) -> str:
         """ Lock the Event and prevent and further changes """
         if self.finalized_event_id is not None:
             raise Exception("Event was already finalized!")
