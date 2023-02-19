@@ -90,7 +90,53 @@ class TestEvent:
         event = Event(content="Adding a 'p' tag")
         event.add_pubkey_ref(some_pubkey)
         assert ['p', some_pubkey] in event.tags
+    
 
+    def test_extract_content_refs(self):
+        """ should replace "@npub1" and "@note1" refs in `content` """
+        pk1 = PrivateKey()
+        pk2 = PrivateKey()
+        e1 = Event("Hello, world!", public_key=pk2.public_key.hex())
+        event = Event(
+            f"Hello, @{pk1.public_key.bech32()}, did you see this: @{e1.note_id}?"
+        )
+        event.extract_content_refs()
+
+        # The "@npub1" ref to pk1 should have been extracted into the first #[x] w/corresponding 'p' tag
+        assert(f"@{pk1.public_key.bech32()}" not in event.content)
+        assert("#[0]" in event.content)
+        assert(event.tags[0][0] == 'p')
+        assert(pk1.public_key.hex() == event.tags[0][1])
+
+        # The "@note1" ref should have been extracted into the second #[x] w/corresponding 'e' tag
+        assert(f"@{e1.note_id}" not in event.content)
+        assert("#[1]" in event.content)
+        assert(event.tags[1][0] == 'e')
+        assert(e1.id == event.tags[1][1])
+
+        # Torture test the regex
+        event = Event(
+            f"@@{pk1.public_key.bech32()}@{e1.note_id}foo@{pk2.public_key.bech32()}bar"
+        )
+        event.extract_content_refs()
+
+        # The "@npub1" ref to pk1 should have been extracted into the first #[x] w/corresponding 'p' tag
+        assert(f"@{pk1.public_key.bech32()}" not in event.content)
+        assert("#[0]" in event.content)
+        assert(event.tags[0][0] == 'p')
+        assert(pk1.public_key.hex() == event.tags[0][1])
+
+        # The "@note1" ref should have been extracted into the second #[x] w/corresponding 'e' tag
+        assert(f"@{e1.note_id}" not in event.content)
+        assert("#[1]" in event.content)
+        assert(event.tags[1][0] == 'e')
+        assert(e1.id == event.tags[1][1])
+
+        # The "@npub1" ref to pk2 should have been extracted into the third #[x] w/corresponding 'p' tag
+        assert(f"@{pk2.public_key.bech32()}" not in event.content)
+        assert("#[2]" in event.content)
+        assert(event.tags[2][0] == 'p')
+        assert(pk2.public_key.hex() == event.tags[2][1])
 
 
 class TestEncryptedDirectMessage:

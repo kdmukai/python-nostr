@@ -91,10 +91,11 @@ class Event:
         return Event.from_dict(data)
 
     @classmethod
-    def bech32_to_hex(cls, note_id):
+    def bech32_to_hex(cls, note_id) -> str:
+        print(f"note_id: {note_id}")
         hrp, data, spec = bech32.bech32_decode(note_id)
         raw_hex = bech32.convertbits(data, 5, 8)[:-1]
-        return hexlify(bytes(raw_hex))
+        return bytes(raw_hex).hex()
 
 
     @staticmethod
@@ -155,8 +156,8 @@ class Event:
         from nostr import key
 
         at_ref_options = ["npub1", "note1"]
-        re_patterns = [f"@{op}[{bech32.CHARSET}]{{58}}" for op in at_ref_options]
-        regex = re.compile(f"""({ "|".join(re_patterns) })""")
+        re_patterns = [f"@{op}" for op in at_ref_options]
+        regex = re.compile(f"""({ "|".join(re_patterns) })[{bech32.CHARSET}]{{58}}""")
 
         ref_matches: List[str] = []
         for ref_index in [m.start() for m in regex.finditer(self.content)]:
