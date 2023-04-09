@@ -55,8 +55,6 @@ class Event:
         if self.created_at is None:
             self.created_at = int(time.time())
         
-        self.finalized_event_id = None
-
 
     @classmethod
     def from_dict(cls, event_dict: dict):
@@ -90,6 +88,7 @@ class Event:
             data = data["event"]
         return Event.from_dict(data)
 
+
     @classmethod
     def bech32_to_hex(cls, note_id) -> str:
         print(f"note_id: {note_id}")
@@ -113,10 +112,7 @@ class Event:
     @property
     def id(self) -> str:
         # Always recompute the id to reflect the up-to-date state of the Event
-        current_id = Event.compute_id(self.public_key, self.created_at, self.kind, self.tags, self.content)
-        if self.finalized_event_id is not None and self.finalized_event_id != current_id:
-            raise Exception("Finalized Event was edited!")
-        return current_id
+        return Event.compute_id(self.public_key, self.created_at, self.kind, self.tags, self.content)
 
 
     @property
@@ -133,19 +129,6 @@ class Event:
     @property
     def event_refs(self) -> List[str]:
         return [tag[1] for tag in self.tags if tag[0] == 'e']
-    
-
-    def finalize(self) -> str:
-        """ Lock the Event and prevent and further changes """
-        if self.finalized_event_id is not None:
-            raise Exception("Event was already finalized!")
-
-        # Alter the content as needed and replace with refs
-        self.extract_content_refs()
-
-        # Store finalized result
-        self.finalized_event_id = self.id
-        return self.finalized_event_id
 
 
     def extract_content_refs(self):
@@ -178,15 +161,11 @@ class Event:
 
     def add_pubkey_ref(self, pubkey:str):
         """ Adds a reference to a pubkey as a 'p' tag """
-        if self.finalized_event_id is not None:
-            raise Exception("Cannot edit a finalized Event!")
         self.tags.append(['p', pubkey])
 
 
     def add_event_ref(self, event_id:str):
         """ Adds a reference to an event_id as an 'e' tag """
-        if self.finalized_event_id is not None:
-            raise Exception("Cannot edit a finalized Event!")
         self.tags.append(['e', event_id])
 
 
